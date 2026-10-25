@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ 'Edit' if book else 'Add' }} Book | Library</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='library_style.css') }}">
+</head>
+<body>
+    <div class="form-page">
+        <header class="form-header">
+            <a href="{{ url_for('library_index') }}" class="back-link">
+                &larr; Back to Library
+            </a>
+            <div class="form-brand">
+                <span class="brand-icon">&#10022;</span>
+                <span>THE LIBRARY</span>
+            </div>
+        </header>
+        <main class="form-container">
+            <div class="form-heading">
+                <span class="eyebrow">LIBRARY COLLECTION</span>
+                <h1>{{ 'Edit Book' if book else 'Add a New Book' }}</h1>
+                <p>
+                    {% if book %}
+                        Update the details of your selected book.
+                    {% else %}
+                        Add a new title to your personal library collection.
+                    {% endif %}
+                </p>
+            </div>
+            {% for message in get_flashed_messages() %}
+                <div class="form-alert">{{ message }}</div>
+            {% endfor %}
+            <form method="POST" class="library-form" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <div class="form-group">
+                    <label for="title">Book Title</label>
+                    <input
+                        id="title"
+                        name="title"
+                        type="text"
+                        placeholder="e.g. The Great Gatsby"
+                        value="{{ book.title if book else '' }}"
+                        required
+                    >
+                </div>
+                <div class="form-group">
+                    <label for="price">Price</label>
+                    <div class="price-input">
+                        <span class="currency-symbol">$</span>
+                        <input
+                            id="price"
+                            name="price"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            placeholder="0.00"
+                            value="{{ book.price if book else '' }}"
+                            required
+                        >
+                    </div>
+                    <small>Enter the price using numbers only.</small>
+                </div>
+                <div class="form-group">
+                    <label for="author_id">Author</label>
+                    <select id="author_id" name="author_id" required>
+                        <option value="">Select an author</option>
+                        {% for author in authors %}
+                            <option
+                                value="{{ author.author_id }}"
+                                {% if book and book.author_id == author.author_id %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ author.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    {% if not authors %}
+                        <small>
+                            No authors available.
+                            <a href="{{ url_for('add_author') }}">
+                                Add an author first
+                            </a>.
+                        </small>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+    <label for="image">Book Cover</label>
+    {% if book and book.image_url %}
+        <div class="current-image">
+            <p>Current cover:</p>
+            <img
+                src="{{ url_for('static', filename=book.image_url) }}"
+                alt="Current book cover"
+                style="width: 100px; height: 140px; object-fit: contain;"
+            >
+        </div>
+    {% endif %}
+    <input
+        id="image"
+        name="image"
+        type="file"
+        accept=".jpg,.jpeg,.png,.webp,.gif"
+    >
+    <small>
+        Optional. Choose a JPG, PNG, WEBP, or GIF image.
+        Leave empty to keep the current cover when editing.
+    </small>
+</div>
+                <div class="form-actions">
+                    <a href="{{ url_for('library_index') }}" class="cancel-button">
+                        Cancel
+                    </a>
+                    <button type="submit" class="save-button">
+                        {{ 'Save Changes' if book else 'Add Book' }}
+                        <span>&rarr;</span>
+                    </button>
+                </div>
+            </form>
+            <p class="form-footer">
+                A thoughtfully organized collection begins with every detail.
+            </p>
+        </main>
+    </div>
+</body>
+</html>

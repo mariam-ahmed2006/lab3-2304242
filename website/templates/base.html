@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}To-Do App{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <div class="container py-4" style="max-width: 600px;">
+    {% if session.get('user_id') %}
+    <nav class="d-flex gap-3 mb-3" aria-label="Main navigation">
+      <a href="{{ url_for('todos') }}">My to-dos</a>
+      <a href="{{ url_for('library_index') }}">Library</a>
+    </nav>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </div>
+  <script src="{{ url_for('static', filename='validate.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+# Private environment settings
+website/settings.env
+website/.env
+website/venv/
+website/__pycache__/
+__pycache__/
+*.pyc

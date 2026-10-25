@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}My To-Dos{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">To-Do</h1>
+  <div>Hi, {{ name }} <form method="POST" action="{{ url_for('logout') }}" class="d-inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="btn btn-sm btn-outline-secondary ms-2" type="submit">Log out</button></form></div>
+</div>
+
+{% for e in errors %}<div class="alert alert-danger py-2 mb-2">{{ e }}</div>{% endfor %}
+
+<form method="POST" action="/todos/add" class="title-form d-flex flex-wrap gap-2 mb-3" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <input class="form-control flex-grow-1 w-auto" name="title" placeholder="What needs to be done?">
+  <button class="btn btn-primary" type="submit">Add</button>
+</form>
+
+{% if todos %}
+  <p class="mb-3">
+    <span class="badge text-bg-primary">{{ open_count }} open</span>
+    <span class="badge text-bg-success">{{ done_count }} done</span>
+  </p>
+{% endif %}
+
+{% if not todos %}
+  <p class="text-muted text-center my-4">Nothing to do yet. Add your first task above!</p>
+{% endif %}
+
+{% for t in todos %}
+<div class="d-flex align-items-start gap-2 mb-2">
+  <form method="POST" action="/todos/{{ t.todo_id }}/toggle">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="is_done" value="{{ 0 if t.is_done else 1 }}">
+    <button class="btn btn-sm {{ 'btn-success' if t.is_done else 'btn-outline-secondary' }}" type="submit">{{ "✔" if t.is_done else "○" }}</button>
+  </form>
+  <form method="POST" action="/todos/{{ t.todo_id }}/edit" class="title-form d-flex flex-wrap gap-1 flex-grow-1" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input class="form-control form-control-sm flex-grow-1 w-auto {{ 'text-decoration-line-through text-muted' if t.is_done }}" name="title" value="{{ t.title }}">
+    <button class="btn btn-sm btn-outline-primary" type="submit">Save</button>
+  </form>
+  <form method="POST" action="/todos/{{ t.todo_id }}/delete" onsubmit="return confirm('Are you sure?')">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+  </form>
+</div>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,64 @@
+Q1.1 - Deleting a referenced employee
+
+SQL used (after the company seed script):
+START TRANSACTION;
+INSERT INTO DEPARTMENT (Dnumber, Dname, mgr_ssn, mgr_start_date)
+VALUES (900001, 'Integrity demonstration', '100000001', '2026-10-25');
+DELETE FROM EMPLOYEE WHERE ssn = '100000001';
+-- After observing the error, run ROLLBACK to remove the temporary department.
+ROLLBACK;
+
+Actual MariaDB output:
+1451: Cannot delete or update a parent row: a foreign key constraint fails (`combined_labs`.`department`, CONSTRAINT `fk_department_manager` FOREIGN KEY (`mgr_ssn`) REFERENCES `EMPLOYEE` (`ssn`))
+
+The DELETE fails because DEPARTMENT.mgr_ssn references that employee.
+The default foreign-key action rejects deletion of the referenced parent.
+The test transaction was rolled back; seeded rows remain unchanged.
+
+Q1.2 - Project referencing a nonexistent department
+
+SQL used:
+INSERT INTO PROJECT (Pnumber, Pname, Plocation, Dno)
+VALUES (900001, 'Unknown Project', 'Alexandria', 99);
+
+Actual MariaDB output:
+1452: Cannot add or update a child row: a foreign key constraint fails (`combined_labs`.`project`, CONSTRAINT `fk_project_department` FOREIGN KEY (`Dno`) REFERENCES `DEPARTMENT` (`Dnumber`))
+
+Department 99 does not exist. The project department foreign key rejects
+this child row to preserve referential integrity. No row was inserted.
+
+Q1.3 - Both mgr_ssn and Dno are NOT NULL
+
+With BOTH immediate foreign keys already active and BOTH columns NOT NULL,
+there is no valid first INSERT: an employee needs an existing department,
+and that department needs an existing employee as manager. A transaction
+alone cannot solve this: MySQL/MariaDB checks these foreign keys immediately,
+not only at COMMIT.
+
+The supplied schema deliberately permits DEPARTMENT.mgr_ssn to be NULL.
+This changes the hypothetical NOT NULL condition and allows a valid order:
+
+-- From problem1_DML.sql, after creating the schema:
+INSERT INTO DEPARTMENT (Dnumber, Dname, mgr_ssn, mgr_start_date)
+VALUES (1, 'Engineering', NULL, NULL);
+INSERT INTO EMPLOYEE
+    (ssn, fname, lname, bdate, address, gender, salary, Dno)
+VALUES
+    ('100000001', 'Ahmed', 'Ali', '2002-05-12',
+     'Alexandria', 'M', 15000.00, 1);
+UPDATE DEPARTMENT
+SET mgr_ssn = '100000001', mgr_start_date = '2025-01-01'
+WHERE Dnumber = 1;
+
+Observed result on a fresh schema: these statements succeed. The full seed
+script populates three departments, three employees, and three projects.
+Do not run these illustrative inserts after seeding: use the repeatable
+problem1_DML.sql for setup, because the IDs already exist after setup.
+
+If both columns MUST remain NOT NULL during the initial load, another
+schema-creation strategy is to add one of the circular foreign keys only
+after inserting the mutually consistent initial rows, then validate by
+adding the constraint. This is different from deferring an active FK.
+No script in the combined project disables FOREIGN_KEY_CHECKS.
+
+The integrated version uses combined_labs as its one database.

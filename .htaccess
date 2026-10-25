@@ -1,0 +1,2 @@
+# Flask serves this application on port 5001. Keep its source and .env private on Apache.
+Require all denied

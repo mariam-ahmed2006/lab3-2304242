@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library | Management Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='library_style.css') }}">
+</head>
+<body>
+<div class="app-layout">
+    <aside class="sidebar">
+        <a href="{{ url_for('library_index') }}" class="brand">
+            <span class="brand-icon">♧</span>
+            <span>
+                <span class="brand-name">The Library</span><br>
+                <span class="brand-subtitle">MANAGEMENT SYSTEM</span>
+            </span>
+        </a>
+        <div class="nav-label">Workspace</div>
+        <nav>
+            <a class="nav-link active" href="{{ url_for('library_index') }}">
+                <span class="nav-icon">⌂</span> Dashboard
+            </a>
+            <a class="nav-link" href="#books">
+                <span class="nav-icon">▤</span> Books
+            </a>
+            <a class="nav-link" href="#authors">
+                <span class="nav-icon">♙</span> Authors
+            </a>
+            <a class="nav-link" href="{{ url_for('add_book') }}">
+                <span class="nav-icon">+</span> Add a book
+            </a>
+            <a class="nav-link" href="{{ url_for('add_author') }}">
+                <span class="nav-icon">+</span> Add an author
+            </a>
+        </nav>
+        <nav aria-label="Account navigation">
+            <a class="nav-link" href="{{ url_for('todos') }}">My to-dos</a>
+            <form method="POST" action="{{ url_for('logout') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button class="btn btn-outline" type="submit">Log out</button>
+            </form>
+        </nav>
+        <div class="sidebar-footer">
+            <div style="color: var(--gold); margin-bottom: 6px;">
+                ✦ Curated with care
+            </div>
+            Library Management System<br>
+            © 2026
+        </div>
+    </aside>
+    <main class="main-content">
+<header class="topbar">
+    <div>
+        <div class="topbar-note">LIBRARY MANAGEMENT / {{ session["name"] }}</div>
+    </div>
+    <a href="{{ url_for('add_book') }}" class="btn btn-gold">
+        + Add new book
+    </a>
+</header>
+        <section class="page-heading">
+            <p style="color: var(--gold); font-weight: 700; letter-spacing: 2px;
+                      font-size: 11px; margin-bottom: 8px;">
+                YOUR LIBRARY AT A GLANCE
+            </p>
+            <h1>Welcome to your library.</h1>
+            <p>Manage your collection, discover your catalog, and keep everything organized.</p>
+        </section>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="message {{ 'error' if category == 'error' else '' }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endwith %}
+        <section class="stats-grid">
+            <article class="stat-card">
+                <div class="stat-icon">▤</div>
+                <div>
+                    <div class="stat-value">{{ total_books }}</div>
+                    <div class="stat-label">Total books</div>
+                </div>
+            </article>
+            <article class="stat-card">
+                <div class="stat-icon">♙</div>
+                <div>
+                    <div class="stat-value">{{ total_authors }}</div>
+                    <div class="stat-label">Total authors</div>
+                </div>
+            </article>
+            <article class="stat-card">
+                <div class="stat-icon">▤</div>
+                <div>
+                    <div class="stat-value">{{ "%.2f"|format(average_price) }}</div>
+                    <div class="stat-label">Average book price</div>
+                </div>
+            </article>
+            <article class="stat-card">
+                <div class="stat-icon">◉</div>
+                <div>
+                    <div class="stat-value">{{ total_countries }}</div>
+                    <div class="stat-label">Countries represented</div>
+                </div>
+            </article>
+        </section>
+        <section class="panel" id="books">
+            <div class="panel-heading">
+                <div>
+                    <h2>Explore the collection</h2>
+                    <p class="muted">A preview of your most recently added books.</p>
+                </div>
+                <a href="#book-table" class="btn btn-outline">View all books ↓</a>
+            </div>
+            {% if books %}
+            <div class="book-grid">
+                {% for book in books[:6] %}
+<article class="book-card">
+    {% if book.image_url %}
+        <img
+            src="{{ url_for('static', filename=book.image_url) }}"
+            alt="Cover of {{ book.title }}"
+            class="book-cover"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+        >
+        <div class="book-cover-placeholder" style="display: none;">
+            No cover available
+        </div>
+    {% else %}
+        <div class="book-cover-placeholder">
+            No cover available
+        </div>
+    {% endif %}
+    <div class="book-info">
+        <div class="book-title">{{ book.title }}</div>
+        <div class="book-author">{{ book.author_name }}</div>
+        <div class="book-price">
+            {{ "%.2f"|format(book.price) }}
+        </div>
+        <div class="book-actions">
+            <a class="btn"
+               href="{{ url_for('edit_book', book_id=book.book_id) }}">
+                Edit
+            </a>
+            <form method="POST"
+                  action="{{ url_for('delete_book', book_id=book.book_id) }}"
+                  onsubmit="return confirm('Delete this book?')">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button class="btn-danger" type="submit">
+                    Delete
+                </button>
+            </form>
+        </div>
+    </div>
+</article>
+{% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <h3>Your collection starts here.</h3>
+                <p>Add your first book to see it appear on your dashboard.</p>
+                <a href="{{ url_for('add_book') }}" class="btn btn-gold">
+                    + Add your first book
+                </a>
+            </div>
+            {% endif %}
+        </section>
+        <section class="panel section-space" id="book-table">
+            <div class="panel-heading">
+                <div>
+                    <h2>Book catalog</h2>
+                    <p class="muted">Search and manage every book in your database.</p>
+                </div>
+                <a href="{{ url_for('add_book') }}" class="btn btn-gold">
+                    + Add book
+                </a>
+            </div>
+            <div class="table-toolbar">
+                <input class="search-input" id="bookSearch"
+                       type="search" placeholder="Search title, author, or ID..."
+                       aria-label="Search books">
+                <span class="muted">{{ total_books }} books in collection</span>
+            </div>
+            <div class="table-wrap">
+                <table id="booksTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Book title</th>
+                            <th>Author ID</th>
+                            <th>Author</th>
+                            <th>Price</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for book in books %}
+                        <tr>
+                            <td>{{ book.book_id }}</td>
+                            <td>{{ book.title }}</td>
+                            <td>{{ book.author_id }}</td>
+                            <td>{{ book.author_name }}</td>
+                            <td>{{ "%.2f"|format(book.price) }}</td>
+                            <td>
+                                <a class="btn"
+                                   href="{{ url_for('edit_book', book_id=book.book_id) }}">
+                                    Edit
+                                </a>
+                                <form method="POST"
+                                      action="{{ url_for('delete_book', book_id=book.book_id) }}"
+                                      onsubmit="return confirm('Delete this book?')">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <button type="submit" class="btn-danger">
+                                        Delete
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6">No books have been added yet.</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section class="panel section-space" id="authors">
+            <div class="panel-heading">
+                <div>
+                    <h2>Meet the authors</h2>
+                    <p class="muted">Manage the people behind your collection.</p>
+                </div>
+                <a href="{{ url_for('add_author') }}" class="btn btn-gold">
+                    + Add author
+                </a>
+            </div>
+            <div class="table-toolbar">
+                <input class="search-input" id="authorSearch"
+                       type="search" placeholder="Search authors or countries..."
+                       aria-label="Search authors">
+                <span class="muted">{{ total_authors }} authors</span>
+            </div>
+            <div class="table-wrap">
+                <table id="authorsTable">
+              <thead>
+    <tr>
+        <th>ID</th>
+        <th>Photo</th>
+        <th>Name</th>
+        <th>Country</th>
+        <th>Actions</th>
+    </tr>
+</thead>
+<tbody>
+    {% for author in authors %}
+        <tr>
+            <td>{{ author.author_id }}</td>
+            <td>
+                {% if author.image_url %}
+                 <img
+                        src="{{ url_for('static', filename=author.image_url) }}"
+                        alt="Photo of {{ author.name }}"
+                        class="author-photo"
+                    >
+                {% else %}
+                    <span>No photo</span>
+                {% endif %}
+            </td>
+            <td>{{ author.name }}</td>
+            <td>{{ author.country }}</td>
+            <td>
+                <a class="btn"
+                   href="{{ url_for('edit_author', author_id=author.author_id) }}">
+                    Edit
+                </a>
+                <form method="POST"
+                      action="{{ url_for('delete_author', author_id=author.author_id) }}"
+                      onsubmit="return confirm('Delete this author and all their books?')">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button type="submit" class="btn-danger">
+                        Delete
+                    </button>
+                </form>
+            </td>
+        </tr>
+    {% else %}
+        <tr>
+            <td colspan="5">No authors have been added yet.</td>
+        </tr>
+    {% endfor %}
+</tbody>
+                </table>
+            </div>
+        </section>
+        <footer style="text-align: center; padding: 28px 0 10px;
+                       color: var(--muted); font-size: 12px;">
+            A little more order, a little more inspiration. &nbsp; ✦
+        </footer>
+    </main>
+</div>
+<script>
+    function enableTableSearch(inputId, tableId) {
+        const input = document.getElementById(inputId);
+        const table = document.getElementById(tableId);
+        input.addEventListener("input", function () {
+            const query = input.value.toLowerCase().trim();
+            const rows = table.querySelectorAll("tbody tr");
+            rows.forEach(function (row) {
+                row.hidden = !row.textContent.toLowerCase().includes(query);
+            });
+        });
+    }
+    enableTableSearch("bookSearch", "booksTable");
+    enableTableSearch("authorSearch", "authorsTable");
+</script>
+</body>
+</html>
