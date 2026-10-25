@@ -1,6 +1,6 @@
 # Combined Labs 2 and 3
 
-Original author: Mariam Ahmed Mohamed — 2304242 (from the supplied README).
+Mariam Ahmed Mohamed — 2304242 
 
 This is the existing Python/Flask website with login, personal to-dos, authors,
 books, and images connected to ONE database: `combined_labs`.
